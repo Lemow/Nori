@@ -19,7 +19,7 @@ u32 er_create_entity(entity_registry* pEr);
 
 void er_remove_entity(entity_registry* pEr, u32 entityID);
 
-u32 er_add_cvec(entity_registry* pEr, u32 componentSize, u32 InitialCount);
+u32 er_add_cvec(entity_registry *pEr, u32 componentSize, u32 InitialCount);
 
 void er_push_component(entity_registry* pEr, u32 entityID, u32 componentID , const void* pComponent);
 

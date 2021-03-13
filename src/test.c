@@ -3,6 +3,7 @@
 #include "entity_registry.h"
 #include <sys/time.h>
 #include <sys/resource.h>
+#include "allocation.h"
 
 double get_time()
 {
@@ -16,25 +17,42 @@ typedef struct Position
     float x, y, z;
 } Position;
 
+void wtf(sparse_set* ss)
+{
+    FREE(ss->dense);
+    FREE(ss->sparse);
+}
+
 int main()
 {
+    dai_init();
+    cvec cv;
+    cv_init(&cv, sizeof(Position), 1);
 
-    sparse_set lol;
+    Position idk;
+    idk.x = 69;
+    idk.y = 69;
+    idk.z = 69;
 
-    ss_init(&lol, 32);
+    cv_push(&cv, &idk, 0);
+    cv_push(&cv, &idk, 1);
+    cv_push(&cv, &idk, 2);
+    cv_push(&cv, &idk, 3);
+    cv_push(&cv, &idk, 4);
+    cv_push(&cv, &idk, 5);
+    cv_push(&cv, &idk, 6);
+    cv_push(&cv, &idk, 7);
+    cv_push(&cv, &idk, 8);
 
-    for(int i = 0; i < 10000; i++)
-    {
-        ss_insert(&lol, (u32)i);
-    }
+    FREE(cv.components);
+    wtf(&cv.entitySet);
 
-    ss_free(&lol);
-    return 0;
+    return CHECK_MEMORY();
     entity_registry er;
 
     er_init(&er, 2);
 
-    u32 PositionID = er_add_cvec(&er, sizeof(Position), 32);
+    u32 PositionID = er_add_cvec(&er, sizeof(Position), 1);
 
     u32 entity = er_create_entity(&er);
 
@@ -54,29 +72,25 @@ int main()
     u32 entities[69];
     for (int i = 0; i < 69; i++)
     {
+        //   printf("i: %d\n",i);
         entities[i] = er_create_entity(&er);
-        fprintf(stderr, "After createEntity, i = %d\n", i);
 
         er_push_component(&er, entities[i], PositionID, &pos);
-        fprintf(stderr, "After push, i = %d\n", i);
 
         if (i == 42)
         {
             er_remove_entity(&er, entities[i]);
         }
-            fprintf(stderr, "After If, i = %d\n",i);
     }
 
-    cvec *test = &er.cVectors[PositionID];
-
-    const u32 *pID = test->entitySet.sparse;
+    fprintf(stderr, "%s:%d\n\n", __FILE__, __LINE__);
+    const cvec *test = &er.cVectors[PositionID];
 
     CV_FOR(Position, v, test)
     {
-        printf("ID: %u\nPOS:{%f,%f,%f}\n\n", *pID, v->x, v->y, v->z);
-        pID++;
+        // printf("{%f,%f,%f}\n\n", v->x, v->y, v->z);
     }
 
     er_free(&er);
-    return 0;
+    return CHECK_MEMORY();
 }

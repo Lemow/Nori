@@ -11,7 +11,6 @@ typedef struct cvec
     u32 capacity;
     u32 componentCount;
     u32 componentSize;
-
 } cvec;
 
 void cv_init(cvec *pCv, u32 componentSize, u32 initialCount);

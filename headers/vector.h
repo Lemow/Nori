@@ -2,7 +2,6 @@
 
 #include <stdlib.h>
 #include <assert.h>
-#define vectorT(type) struct vectorT { type* begin,*end,*capcacity;}
 
 typedef struct vector
 {

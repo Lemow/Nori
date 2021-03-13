@@ -45,7 +45,6 @@ void* v_push_back(vector* pVec, size_t size)
 
 void v_realloc(vector* pVec, size_t newSize)
 {
-    printf("Realloc!\n");
     const size_t oldSize = v_size(pVec);
     const size_t minSize = min(oldSize,newSize);
     void* newBegin = malloc(newSize);

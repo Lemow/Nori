@@ -1,4 +1,5 @@
 #include "cvec.h"
+#include "allocation.h"
 
 void cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
 {
@@ -6,9 +7,7 @@ void cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
     pCv->capacity = initialCount;
     pCv->componentCount = 0;
     pCv->componentSize = componentSize;
-    pCv->components = malloc(pCv->componentSize * initialCount);
-
-
+    pCv->components = MALLOC(pCv->componentSize * initialCount);
 
 }
 
@@ -30,7 +29,7 @@ void *cv_find(cvec *pCv, u32 id)
 void cv_free(cvec *pCv)
 {
 
-    free(pCv->components);
+    FREE(pCv->components);
     ss_free(&pCv->entitySet);
 }
 
