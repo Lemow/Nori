@@ -25,6 +25,18 @@ u32 er_create_entity(entity_registry *pEr)
     return retval;
 }
 
+cvec* er_get_cvec(entity_registry* pEr, componentID_t componentID)
+{
+#ifdef DEBUG
+    if (pEr->cvecCount <= componentID)
+    {
+        fprintf(stderr, "ComponentID %u does not exist\n", componentID);
+        return NULL;
+    }
+#endif
+    return &pEr->cVectors[componentID];
+}
+
 void er_free(entity_registry *pEr)
 {
     for (int i = 0; i < pEr->cvecCount; i++)
@@ -37,21 +49,21 @@ void er_free(entity_registry *pEr)
     idq_free(&pEr->idQueue);
 }
 
-void er_push_component(entity_registry *pEr, u32 entityID, u32 componentID, const void *pComponent)
+void er_push_component(entity_registry *pEr, entity_t entityID, componentID_t componentID, const void *pComponent)
 {
 
     cvec *pCv = &pEr->cVectors[componentID];
     cv_push(pCv, pComponent, entityID);
 }
 
-void *er_emplace_component(entity_registry *pEr, u32 entityID, u32 componentID)
+void *er_emplace_component(entity_registry *pEr, entity_t entityID, componentID_t componentID)
 {
     cvec *pCv = &pEr->cVectors[componentID];
 
     return cv_emplace(pCv, entityID);
 }
 
-void er_remove_entity(entity_registry *pEr, u32 entityID)
+void er_remove_entity(entity_registry *pEr, entity_t entityID)
 {
     cvec *pVecs = pEr->cVectors;
     const cvec *const pEnd = pEr->cVectors + pEr->cvecCount;
@@ -65,7 +77,7 @@ void er_remove_entity(entity_registry *pEr, u32 entityID)
     idq_push(&pEr->idQueue, entityID);
 }
 
-u32 er_add_cvec(entity_registry *pEr, u32 componentSize, u32 InitialCount)
+entity_t er_add_cvec(entity_registry *pEr, u32 componentSize, u32 InitialCount)
 {
 #ifdef DEBUG
     if (pEr->cvecCount == pEr->cvecCapacity)
@@ -79,7 +91,7 @@ u32 er_add_cvec(entity_registry *pEr, u32 componentSize, u32 InitialCount)
     return pEr->cvecCount++;
 }
 
-void *er_get_component(entity_registry *pEr, u32 entityID, u32 componentID)
+void *er_get_component(entity_registry *pEr, entity_t entityID, componentID_t componentID)
 {
     cvec *pCv = &pEr->cVectors[componentID];
 

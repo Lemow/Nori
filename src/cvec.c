@@ -18,7 +18,7 @@ size_t cv_sizeof(const cvec *pCv)
     return size;
 }
 
-void *cv_find(cvec *pCv, u32 id)
+void *cv_find(cvec *pCv, entity_t id)
 {
     u32 index = ss_find(&pCv->entitySet, id);
 
@@ -31,7 +31,7 @@ void cv_free(cvec *pCv)
     ss_free(&pCv->entitySet);
 }
 
-void cv_push(cvec *pCv, const void *pComponent, u32 id)
+void cv_push(cvec *pCv, const void *pComponent, entity_t id)
 {
 #ifdef DEBUG
     if (ss_find(&pCv->entitySet, id) != -1)
@@ -58,7 +58,7 @@ void cv_push(cvec *pCv, const void *pComponent, u32 id)
     pCv->componentCount++;
 }
 
-void *cv_emplace(cvec *pCv, u32 id)
+void *cv_emplace(cvec *pCv, entity_t id)
 {
 #ifdef DEBUG
     if (ss_find(&pCv->entitySet, id) != -1)
@@ -83,7 +83,7 @@ void *cv_emplace(cvec *pCv, u32 id)
     return pInsert;
 }
 
-void cv_remove(cvec *pCv, u32 id)
+void cv_remove(cvec *pCv, entity_t id)
 {
     void *pToRemove = (char*)pCv->components + ss_find(&pCv->entitySet, id) * pCv->componentSize;
     void *pLast = (char*)pCv->components + (pCv->componentCount - 1) * pCv->componentSize;

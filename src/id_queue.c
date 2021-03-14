@@ -5,7 +5,7 @@ void idq_init(id_queue *pQue)
     pQue->back = pQue->front = NULL;
 }
 
-void idq_push(id_queue *pQue, u32 id)
+void idq_push(id_queue *pQue, entity_t id)
 {
     id_node *newBack = MALLOC(sizeof(id_node));
     newBack->id = id;
@@ -21,7 +21,7 @@ void idq_push(id_queue *pQue, u32 id)
 
 }
 
-void idq_pop(id_queue *pQue, u32 *id)
+void idq_pop(id_queue *pQue, entity_t*id)
 {
     if (id)
         *id = pQue->front->id;

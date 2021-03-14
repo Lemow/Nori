@@ -14,7 +14,7 @@ u32 ss_count(const sparse_set * const pSs)
     return pSs->denseCount;
 }
 
-u32 ss_find(sparse_set * const pSs, u32 val)
+u32 ss_find(sparse_set * const pSs, entity_t val)
 {
     if (val > pSs->maxVal)
         return -1;
@@ -30,7 +30,7 @@ u32 ss_find(sparse_set * const pSs, u32 val)
         return -1;
 }
 
-void ss_insert(sparse_set * const pSs, u32 val)
+void ss_insert(sparse_set * const pSs, entity_t val)
 {
 
     if (pSs->maxVal < val)
@@ -56,7 +56,7 @@ void ss_insert(sparse_set * const pSs, u32 val)
     pSs->denseCount++;
 }
 
-void ss_remove(sparse_set * const pSs, u32 val)
+void ss_remove(sparse_set * const pSs, entity_t val)
 {
     u32 index = pSs->sparse[val];
     u32 lastIndex = pSs->denseCount - 1;

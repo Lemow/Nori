@@ -4,10 +4,12 @@
 #include <string.h>
 #include <math.h>
 
-
-#define min(a,b) (((a) <= (b)) ? (a) : (b))
-
-#define max(a, b) (((a) >= (b)) ? (a) : (b))
+#ifndef min
+    #define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef max
+    #define max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
 
 #define CV_FOR(componentType, ptrName, pCv) for (componentType *ptrName = (componentType *)(pCv)->components; ptrName != (componentType *)((pCv)->components) + (pCv)->componentCount; ptrName++)
 
@@ -31,6 +33,11 @@ typedef double f64;
 typedef long double f80;
 
 typedef char* string;
+
+typedef u32 entity_t;
+typedef u32 componentID_t;
+
+
 
 /// DEBUG ALLOCATION INFO
 
@@ -71,8 +78,8 @@ Allocation* av_find(alloc_vector * pAv, const void* ptr);
 
 
 void dai_init();
-void* dalloc(size_t size, const char* fileName, const char* functionName, int line);
 void dfree(void* ptr);
+void* dalloc(size_t size, const char* fileName, const char* functionName, int line);
 void* drealloc(void* ptr, size_t size);
 int checkMemory();
 
@@ -104,17 +111,11 @@ typedef struct sparse_set
 
 }sparse_set;
 
-
 void ss_init(sparse_set* const pSs, size_t initialCount);
-
-void ss_insert(sparse_set* const pSs, u32 val);
-
-u32 ss_find(const sparse_set* const pSs, u32 val);
-
-void ss_remove(sparse_set* const pSs, u32 val);
-
+void ss_insert(sparse_set* const pSs, entity_t entityID);
+void ss_remove(sparse_set* const pSs, entity_t entityID);
 void ss_free(sparse_set* const pSs);
-
+u32 ss_find(const sparse_set* const pSs, entity_t entityID);
 u32 ss_count(const sparse_set* pSs);
 
 /// <summary>
@@ -134,14 +135,10 @@ typedef struct id_queue
 }id_queue;
 
 void idq_init(id_queue* pQue);
-
-void idq_push(id_queue* pQue, u32 id);
-
-void idq_pop(id_queue* pQue, u32* id);
-
-bool idq_is_empty(const id_queue* pQue);
-
+void idq_push(id_queue* pQue, entity_t id);
+void idq_pop(id_queue* pQue, entity_t* id);
 void idq_free(id_queue* free);
+bool idq_is_empty(const id_queue* pQue);
 
 
 typedef struct cvec
@@ -158,17 +155,11 @@ typedef struct cvec
 /// </summary>
 
 void cv_init(cvec* pCv, u32 componentSize, u32 initialCount);
-
-void cv_push(cvec* pCv, const void* pComponent, u32 id);
-
-void* cv_emplace(cvec* pCv, u32 id);
-
-void cv_remove(cvec* pCv, u32 id);
-
+void cv_push(cvec* pCv, const void* pComponent, entity_t entityID);
+void cv_remove(cvec* pCv, entity_t entityID);
 void cv_free(cvec* pCv);
-
-void* cv_find(cvec* pCv, u32 id);
-
+void* cv_emplace(cvec* pCv, entity_t entityID);
+void* cv_find(cvec* pCv, entity_t entityID);
 size_t cv_sizeof(const cvec* pCv);
 
 
@@ -184,17 +175,11 @@ typedef struct entity_registry
 
 
 void er_init(entity_registry* pEr, u32 cvecCount);
-
-u32 er_create_entity(entity_registry* pEr);
-
-void er_remove_entity(entity_registry* pEr, u32 entityID);
-
-u32 er_add_cvec(entity_registry* pEr, u32 componentSize, u32 InitialCount);
-
-void er_push_component(entity_registry* pEr, u32 entityID, u32 componentID, const void* pComponent);
-
-void* er_emplace_component(entity_registry* pEr, u32 entityID, u32 componentID);
-
-void* er_get_component(entity_registry* pEr, u32 entityID, u32 componentID);
-
+void er_remove_entity(entity_registry* pEr, entity_t entityID);
+void er_push_component(entity_registry* pEr, entity_t entityID, componentID_t componentID, const void* pComponent);
 void er_free(entity_registry* pEr);
+void* er_emplace_component(entity_registry* pEr, entity_t entityID, componentID_t componentID);
+void* er_get_component(entity_registry* pEr, entity_t entityID, componentID_t componentID);
+componentID_t er_add_cvec(entity_registry* pEr, u32 componentSize, u32 InitialCount);
+entity_t er_create_entity(entity_registry* pEr);
+cvec* er_get_cvec(entity_registry* pEr, componentID_t componentID);
