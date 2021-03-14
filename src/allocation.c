@@ -1,4 +1,5 @@
-#include "allocation.h"
+#include "Nori.h"
+
 #ifdef DEBUG
 
 #include <stdlib.h>
@@ -7,18 +8,102 @@
 
 DebugAllocateInfo debugAllocationInfo;
 
+void av_grow(alloc_vector* pAv)
+{
+    size_t newCap = pAv->cap - pAv->begin;
+    size_t newEnd = pAv->end - pAv->begin;
+    Allocation* newBegin = realloc(pAv->begin, newCap * sizeof(Allocation));
+    if (newBegin)
+    {
+        pAv->begin = newBegin;
+        pAv->end = pAv->begin + newEnd;
+    }
+    pAv->cap = pAv->begin + newCap;
+}
+
+void av_init(alloc_vector* pAv)
+{
+    pAv->begin = malloc(sizeof(Allocation) * 16);
+    pAv->end = pAv->begin;
+    pAv->cap = pAv->begin + 16;
+}
+
+void av_push(alloc_vector* pAv, const Allocation* alloc)
+{
+    if (pAv->end == pAv->cap)
+    {
+        av_grow(pAv);
+    }
+
+    memcpy(pAv->end, alloc, sizeof(Allocation));
+    pAv->end++;
+}
+
+bool av_remove(alloc_vector* pAv, void* pToRemove)
+{
+    Allocation* pToDelete = av_find(pAv, pToRemove);
+
+    if (!pToDelete)
+    {
+        fprintf(stderr, "%p not found in allocation vector.\n", pToRemove);
+        return false;
+    }
+    else
+    {
+        pAv->end--;
+        memcpy(pToDelete, pAv->end, sizeof(Allocation));
+        return true;
+    }
+}
+
+void av_free(alloc_vector* pAv)
+{
+    free(pAv->begin);
+}
+
+size_t av_size(const alloc_vector* pAv)
+{
+    return pAv->end - pAv->begin;
+}
+
+Allocation* av_emplace(alloc_vector* pAv)
+{
+    if (pAv->end == pAv->cap)
+    {
+        av_grow(pAv);
+    }
+
+    Allocation* retval = pAv->end;
+    pAv->end++;
+
+    return retval;
+}
+
+Allocation* av_find(alloc_vector* pAv, const void* ptr)
+{
+    Allocation* begin = pAv->begin;
+    Allocation* end = pAv->end;
+    for (; begin != end; begin++)
+    {
+        if (begin->ptr == ptr)
+        {
+            return begin;
+        }
+    }
+
+    return NULL;
+}
+
 void dai_init()
 {
-    v_alloc(&debugAllocationInfo.allocations, 128 * sizeof(Allocation));
+    av_init(&debugAllocationInfo.allocations);
 }
 
 void* dalloc(size_t size, const char* fileName,const char* functionName, int line)
 {
-    printf("dai@%p\n",&debugAllocationInfo);
     void* retval = malloc(size);
-    printf("Allocated %lu bytes at adress %p @%s:%s:%d\n",size, retval,fileName,functionName,line);
 
-    Allocation* ptr = v_push_back(&debugAllocationInfo.allocations, sizeof(Allocation));
+    Allocation* ptr = av_emplace(&debugAllocationInfo.allocations);
     ptr->ptr = retval;
     strcpy(ptr->file, fileName);
     strcpy(ptr->function, functionName);
@@ -31,44 +116,41 @@ void* dalloc(size_t size, const char* fileName,const char* functionName, int lin
 
 void dfree(void* ptr)
 {
-    Allocation* toDelete = NULL;
-    printf("pointers:\n");
-    V_FOR(Allocation*, iter, &debugAllocationInfo.allocations)
-    {
-        printf("%p\n",iter->ptr);
-        if(iter->ptr == ptr)
-        {
-            toDelete = iter;
-            printf("@%p\nhuh\n", iter);
-        }
-    }
-    if(!toDelete)
-    {
-        fprintf(stderr, "%p not found in allocationInfo struct\n", ptr);
-        free(ptr);
-        return;
-    }
-    printf("Freeing %p\n", ptr);
+    av_remove(&debugAllocationInfo.allocations, ptr);
     free(ptr);
-    printf("Freed %p\n", ptr);
-    Allocation* last = ((Allocation*)debugAllocationInfo.allocations.end) - 1;
-    fprintf(stderr, "%lu bytes @%p allocated in %s:%s, line %d not freed!\n", last->size, last->ptr, last->file, last->function, last->line);
-    toDelete->line = last->line;
-    toDelete->ptr = last->ptr;
-    toDelete->size = last->size;
-    v_pop_back(&debugAllocationInfo.allocations, sizeof(Allocation));
+}
+
+void* drealloc(void* ptr, size_t size)
+{
+    Allocation* pAlloc = av_find(&debugAllocationInfo.allocations, ptr);
+    if (!pAlloc)
+        return realloc(ptr, size);
+
+    void* retval = realloc(ptr, size);
+
+    if (retval)
+        pAlloc->ptr = retval;
+
+    return retval;
 }
 
 int checkMemory()
 {
-    V_FOR(Allocation*, iter, &debugAllocationInfo.allocations)
+    Allocation* iter = debugAllocationInfo.allocations.begin;
+    Allocation* end = debugAllocationInfo.allocations.end;
+    Allocation* pToDelete = NULL;
+    for (; iter != end; iter++)
     {
         fprintf(stderr, "%lu bytes @%p allocated in %s:%s, line %d not freed!\n", iter->size, iter->ptr, iter->file,iter->function, iter->line);
     }
-    if(v_size(&debugAllocationInfo.allocations) != 0)
-        return -1;
+
+    int retval;
+    if(av_size(&debugAllocationInfo.allocations) != 0)
+        retval = -1;
     else
-        return 0;        
+        retval = 0;        
+    av_free(&debugAllocationInfo.allocations);
+    return retval;
 }
 
 #endif

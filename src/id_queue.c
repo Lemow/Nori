@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "id_queue.h"
-#include "allocation.h"
+#include "Nori.h"
 
 void idq_init(id_queue *pQue)
 {
@@ -42,7 +39,6 @@ void idq_pop(id_queue *pQue, u32 *id)
 
 void idq_free(id_queue *pQue)
 {
-    fprintf(stderr, "????");
 
     while (pQue->front)
     {

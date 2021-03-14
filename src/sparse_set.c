@@ -1,10 +1,6 @@
-#include "sparse_set.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include "allocation.h"
+#include "Nori.h"
 
-void ss_init(sparse_set *pSs, size_t initialCount)
+void ss_init(sparse_set * const pSs, size_t initialCount)
 {
     pSs->dense = MALLOC(initialCount * sizeof(u32));
     pSs->sparse = MALLOC(initialCount * sizeof(u32));
@@ -13,12 +9,12 @@ void ss_init(sparse_set *pSs, size_t initialCount)
     pSs->denseCount = 0;
 }
 
-u32 ss_count(const sparse_set *pSs)
+u32 ss_count(const sparse_set * const pSs)
 {
     return pSs->denseCount;
 }
 
-u32 ss_find(sparse_set *pSs, u32 val)
+u32 ss_find(sparse_set * const pSs, u32 val)
 {
     if (val > pSs->maxVal)
         return -1;
@@ -34,20 +30,23 @@ u32 ss_find(sparse_set *pSs, u32 val)
         return -1;
 }
 
-void ss_insert(sparse_set *pSs, u32 val)
+void ss_insert(sparse_set * const pSs, u32 val)
 {
 
     if (pSs->maxVal < val)
     {
-        pSs->sparse = realloc(pSs->sparse, (val + 1) * sizeof(u32));
+        void* newSparse = REALLOC(pSs->sparse, (val + 1) * sizeof(u32));
+        if(newSparse)
+            pSs->sparse = newSparse;
         pSs->maxVal = val;
     }
 
     if (pSs->denseCount == pSs->denseCapacity)
     {
         u32 newCap = pSs->denseCapacity * 2;
-        fprintf(stderr, "%u\n",pSs->dense[pSs->denseCount - 1]);
-        pSs->dense = realloc(pSs->dense, newCap * sizeof(u32));
+        void* newDense = REALLOC(pSs->dense, newCap * sizeof(u32));
+        if (newDense)
+            pSs->dense = newDense;
         pSs->denseCapacity = newCap;
     }
 
@@ -57,7 +56,7 @@ void ss_insert(sparse_set *pSs, u32 val)
     pSs->denseCount++;
 }
 
-void ss_remove(sparse_set *pSs, u32 val)
+void ss_remove(sparse_set * const pSs, u32 val)
 {
     u32 index = pSs->sparse[val];
     u32 lastIndex = pSs->denseCount - 1;
@@ -72,9 +71,8 @@ void ss_remove(sparse_set *pSs, u32 val)
     pSs->denseCount--;
 }
 
-void ss_free(sparse_set *pSs)
+void ss_free(sparse_set * const pSs)
 {
-    printf("%p\n", pSs->dense);
     FREE(pSs->dense);
     FREE(pSs->sparse);
 }

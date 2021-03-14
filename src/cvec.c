@@ -1,5 +1,4 @@
-#include "cvec.h"
-#include "allocation.h"
+#include "Nori.h"
 
 void cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
 {
@@ -23,12 +22,11 @@ void *cv_find(cvec *pCv, u32 id)
 {
     u32 index = ss_find(&pCv->entitySet, id);
 
-    return (void*)((index != -1) * (u64)(pCv->components + (index * pCv->componentSize)));
+    return (void*)((index != -1) * (u64)((char*)pCv->components + (index * pCv->componentSize)));
 }
 
 void cv_free(cvec *pCv)
 {
-
     FREE(pCv->components);
     ss_free(&pCv->entitySet);
 }
@@ -46,11 +44,13 @@ void cv_push(cvec *pCv, const void *pComponent, u32 id)
 
     if (pCv->capacity == pCv->componentCount)
     {
-        pCv->components = realloc(pCv->components, (pCv->capacity * 2) * pCv->componentSize);
+        void* newBegin = REALLOC(pCv->components, (pCv->capacity * 2) * pCv->componentSize);
+        if (newBegin)
+            pCv->components = newBegin;
+        pCv->capacity = pCv->capacity * 2;
     }
 
-    void *pInsert = pCv->components + (pCv->componentCount * pCv->componentSize);
-
+    void *pInsert = (char*)pCv->components + (pCv->componentCount * pCv->componentSize);
     memcpy(pInsert, pComponent, pCv->componentSize);
 
     ss_insert(&pCv->entitySet, id);
@@ -69,10 +69,13 @@ void *cv_emplace(cvec *pCv, u32 id)
 #endif
     if (pCv->capacity == pCv->componentCount)
     {
-        pCv->components = realloc(pCv->components, (pCv->capacity * 2) * pCv->componentSize);
+        pCv->capacity *= 2;
+        void* newComponents = REALLOC(pCv->components, pCv->capacity * pCv->componentSize);
+        if (newComponents)
+            pCv->components = newComponents;
     }
 
-    void *pInsert = pCv->components + (pCv->componentCount * pCv->componentSize);
+    void *pInsert = (char*)pCv->components + (pCv->componentCount * pCv->componentSize);
 
     ss_insert(&pCv->entitySet, id);
 
@@ -82,8 +85,8 @@ void *cv_emplace(cvec *pCv, u32 id)
 
 void cv_remove(cvec *pCv, u32 id)
 {
-    void *pToRemove = pCv->components + ss_find(&pCv->entitySet, id) * pCv->componentSize;
-    void *pLast = pCv->components + (pCv->componentCount - 1) * pCv->componentSize;
+    void *pToRemove = (char*)pCv->components + ss_find(&pCv->entitySet, id) * pCv->componentSize;
+    void *pLast = (char*)pCv->components + (pCv->componentCount - 1) * pCv->componentSize;
     ss_remove(&pCv->entitySet, id);
 
     memcpy(pToRemove, pLast, pCv->componentSize);

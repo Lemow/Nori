@@ -1,13 +1,13 @@
-#include "entity_registry.h"
-#include "allocation.h"
+#include "Nori.h"
 
 void er_init(entity_registry *pEr, u32 cvecCapacity)
 {
-    idq_init(&pEr->idQueue);
-    pEr->cVectors = MALLOC(cvecCapacity * sizeof(cvec));
+    size_t cvecsize = cvecCapacity * sizeof(cvec);
+    pEr->cVectors = (cvec*)MALLOC(cvecsize);
     pEr->maxID = 0;
     pEr->cvecCount = 0;
     pEr->cvecCapacity = cvecCapacity;
+    idq_init(&pEr->idQueue);
 }
 
 u32 er_create_entity(entity_registry *pEr)
@@ -27,9 +27,9 @@ u32 er_create_entity(entity_registry *pEr)
 
 void er_free(entity_registry *pEr)
 {
-    printf("%s:%d\n\n",__FILE__,__LINE__);
     for (int i = 0; i < pEr->cvecCount; i++)
     {
+
         cv_free(&pEr->cVectors[i]);
     }
     FREE(pEr->cVectors);
