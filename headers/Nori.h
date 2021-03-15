@@ -33,6 +33,7 @@ typedef double f64;
 typedef long double f80;
 
 typedef char* string;
+typedef unsigned char byte;
 
 typedef u32 entity_t;
 typedef u32 componentID_t;
@@ -70,11 +71,11 @@ typedef struct DebugAllocateInfo
 
 void av_init(alloc_vector * pAv);
 void av_push(alloc_vector * pAv, const Allocation * alloc);
-void av_remove(alloc_vector * pAv, void* pToRemove);
 void av_free(alloc_vector * pAv);
 size_t av_size(const alloc_vector * pAv);
 Allocation* av_emplace(alloc_vector * pAv);
 Allocation* av_find(alloc_vector * pAv, const void* ptr);
+bool av_remove(alloc_vector * pAv, void* pToRemove);
 
 
 void dai_init();
@@ -183,3 +184,5 @@ void* er_get_component(entity_registry* pEr, entity_t entityID, componentID_t co
 componentID_t er_add_cvec(entity_registry* pEr, u32 componentSize, u32 InitialCount);
 entity_t er_create_entity(entity_registry* pEr);
 cvec* er_get_cvec(entity_registry* pEr, componentID_t componentID);
+void er_serialize(entity_registry* pEr, const char* filePath);
+void er_deserialize(entity_registry *pEr, const char *filePath);

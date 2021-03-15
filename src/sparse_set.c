@@ -14,7 +14,7 @@ u32 ss_count(const sparse_set * const pSs)
     return pSs->denseCount;
 }
 
-u32 ss_find(sparse_set * const pSs, entity_t val)
+u32 ss_find(const sparse_set * const pSs, entity_t val)
 {
     if (val > pSs->maxVal)
         return -1;

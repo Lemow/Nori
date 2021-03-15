@@ -83,6 +83,9 @@ int main()
          pID++;
     }
 
+    er_serialize(&er, "data.save");
     er_free(&er);
+
+    er_deserialize(&er, "data.save");
     return CHECK_MEMORY();
 }

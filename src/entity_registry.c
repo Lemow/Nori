@@ -97,3 +97,93 @@ void *er_get_component(entity_registry *pEr, entity_t entityID, componentID_t co
 
     return cv_find(pCv, entityID);
 }
+
+void write_to_buffer(void** restrict buffer, const void* restrict src, size_t size)
+{
+    memcpy(*buffer, src, size);
+    *buffer += size;
+}
+
+void er_serialize(entity_registry *pEr, const char *filePath)
+{
+    //TODO: serialize the id queue
+    FILE *pFile = fopen(filePath, "wb");
+    if (pFile)
+    {
+        size_t size = sizeof(entity_registry);
+        for(int i = 0; i < pEr->cvecCount; i++)
+            size += cv_sizeof(&pEr->cVectors[i]);
+
+        id_node* ptr = pEr->idQueue.front;
+        while(ptr)
+        {
+            size += sizeof(u32);
+            ptr = ptr->next;
+        }
+
+        printf("%lu\n",size);
+        char* buffer = MALLOC(size);
+        const char* const end = buffer + size; 
+        char* writer = buffer;
+
+        write_to_buffer(&writer, &pEr->cvecCount, sizeof(u32)); // component count
+        write_to_buffer(&writer, &pEr->maxID, sizeof(u32)); // maxID
+
+
+        for(u32 i = 0; i < pEr->cvecCount; i++)
+        {
+            cvec* pCv = er_get_cvec(pEr,i);
+            const size_t cvecSize = (size_t)pCv->componentCount * (size_t)pCv->componentSize;
+            const size_t denseSize = (size_t)pCv->entitySet.denseCount * sizeof(u32);
+            if(pCv->componentCount != pCv->entitySet.denseCount)
+                fprintf(stderr,"Serialization Error, componentID %u! Component count != Sparse set count\n", i);
+            write_to_buffer(&writer, &pCv->componentSize, sizeof(pCv->componentSize)); // component size
+            write_to_buffer(&writer, &pCv->componentCount, sizeof(u32)); // component count
+            write_to_buffer(&writer,pCv->components, cvecSize); // Components
+            write_to_buffer(&writer, pCv->entitySet.dense, denseSize); // Entity IDs
+        }
+        fwrite(&writer, 1,size,pFile);
+        fclose(pFile);
+        FREE(buffer);
+    } else
+    {
+        fprintf(stderr, "File %s not found!", filePath);
+    }    
+}
+
+
+void er_deserialize(entity_registry* pEr, const char* filePath)
+{
+    FILE* pFile = fopen(filePath, "rb");
+    if(pFile)
+    {
+        fseek(pFile,0, SEEK_END);
+        size_t size = ftell(pFile);
+        fseek(pFile,0, SEEK_SET);
+
+        byte* buffer = MALLOC(size);
+        byte* reader = buffer;
+
+        fread(buffer, 1, size,pFile);
+        sscanf(reader,"%u%u", &pEr->cvecCount, &pEr->maxID);
+        reader += 2 * sizeof(u32);
+
+        pEr->cVectors = MALLOC(pEr->cvecCount * sizeof(cvec));
+
+        for(u32 i = 0; i < pEr->cvecCount; i++)
+        {
+            cvec* pCv = &pEr->cVectors[i];
+            u32 eSize, cCount;
+
+            sscanf(reader, "")
+
+        }        
+
+        FREE(buffer);
+        fclose(pFile);
+    }
+    else
+    {
+        fprintf(stderr, "File %s not found!", filePath);
+    }
+}

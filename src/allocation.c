@@ -138,7 +138,7 @@ int checkMemory()
 {
     Allocation* iter = debugAllocationInfo.allocations.begin;
     Allocation* end = debugAllocationInfo.allocations.end;
-    Allocation* pToDelete = NULL;
+    
     for (; iter != end; iter++)
     {
         fprintf(stderr, "%lu bytes @%p allocated in %s:%s, line %d not freed!\n", iter->size, iter->ptr, iter->file,iter->function, iter->line);

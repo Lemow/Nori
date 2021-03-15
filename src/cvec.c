@@ -13,8 +13,8 @@ void cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
 size_t cv_sizeof(const cvec *pCv)
 {
     size_t size = sizeof(cvec);
-    size += pCv->capacity * pCv->componentSize;
-    size += (pCv->entitySet.denseCapacity + pCv->entitySet.maxVal + 1) * sizeof(u32);
+    size += pCv->componentCount * pCv->componentSize;
+    size += (pCv->entitySet.denseCount + pCv->entitySet.maxVal + 1) * sizeof(u32);
     return size;
 }
 
