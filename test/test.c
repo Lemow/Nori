@@ -19,31 +19,19 @@ double get_time()
 }
 #endif
 
-
 typedef struct Position
 {
-    float x, y, z;
-} Position;
+    float x,y,z;
+}Position;
 
-void wtf(entity_registry* er, u32 s)
-{
-    er->cVectors = MALLOC(s * sizeof(cvec));
-}
-
+#define SIZE 1024 * 1024
 int main()
 {
     DAI_INIT();
-
-    //entity_registry test1;
-    //er_init(&test1,2);
-    //printf("er.cVectors = \t%p\n", test1.cVectors);
-    //er_free(&test1);
-    //return CHECK_MEMORY();
     entity_registry er;
-
     er_init(&er, 2);
 
-    u32 PositionID = er_add_cvec(&er, sizeof(Position), 1);
+    u32 PositionID = er_add_cvec(&er, sizeof(Position), 1024);
 
     u32 entity = er_create_entity(&er);
 
@@ -60,32 +48,35 @@ int main()
     printf("%f %f %f\n\n", ptr->x, ptr->y, ptr->z);
 
     Position pos = *ptr;
-    u32 entities[69];
-    for (int i = 0; i < 69; i++)
+    Position sexy = {69.0f,420.0f,1337.0f};
+    u32 entities[1024];
+    for (int i = 0; i < 1024; i++)
     {
         entities[i] = er_create_entity(&er);
-        pos.x = i % 3;
-        pos.y = (i % 3) + 1;
-        pos.z = (i % 3) + 2;
-        er_push_component(&er, entities[i], PositionID, &pos);
 
-        if (i == 42)
-        {
-            er_remove_entity(&er, entities[i]);
-        }
+            pos.x = i % 3;
+            pos.y = (i % 3) + 1;
+            pos.z = (i % 3) + 2;
+            er_push_component(&er, entities[i], PositionID, &pos);
     }
+
+    ptr = er_get_component(&er, 69, PositionID);
+    *ptr = sexy;
+    
+    er_serialize(&er, "data.save");
+    er_free(&er);
+    er_deserialize(&er, "data.save");
 
     const cvec *test = &er.cVectors[PositionID];
     const u32* pID = er.cVectors[PositionID].entitySet.dense;
-    CV_FOR(Position, v, test)
+    u32 choose = 0;
+    for(int i = 0; i < 100; i++)
     {
-         printf("@%u:{%f,%f,%f}\n\n",*pID, v->x, v->y, v->z);
-         pID++;
+        choose = rand()%1024;
+        ptr = er_get_component(&er, entities[choose],PositionID);
+        printf("@%u:{%f,%f,%f}\n\n",choose, ptr->x, ptr->y, ptr->z);
     }
 
-    er_serialize(&er, "data.save");
     er_free(&er);
-
-    er_deserialize(&er, "data.save");
     return CHECK_MEMORY();
 }

@@ -186,3 +186,22 @@ entity_t er_create_entity(entity_registry* pEr);
 cvec* er_get_cvec(entity_registry* pEr, componentID_t componentID);
 void er_serialize(entity_registry* pEr, const char* filePath);
 void er_deserialize(entity_registry *pEr, const char *filePath);
+
+
+
+/// UTILITY
+
+void write_to_buffer(void **restrict buffer, const void *restrict src, size_t size);
+void recalculate_sparse(sparse_set *pSs);
+
+
+/// VECTOR
+
+void* v_growFunc(void* vec, u32 increment, u32 elementSize);
+
+#define v__need_grow(vec, n) ((vec) == 0 || v_size(vec) + n == v_capacity(vec))
+#define v_raw(vec) (((u32 *)(void *)(vec)-2))
+#define v_size(vec) v_raw(vec)[0]
+#define v_capacity(vec) v_raw(vec)[1]
+#define v_last(vec) (vec)[v_size(vec)-1]
+#define v_push(vec, element) if(v__need_grow(vec,1)) { (vec) = v_growFunc(vec,1,sizeof(element)); }
