@@ -1,4 +1,6 @@
 #include "Nori.h"
+#include <stdio.h>
+
 #ifdef _WIN32
 #include <Windows.h>
 double get_time()
@@ -18,31 +20,31 @@ double get_time()
     return t.tv_sec + t.tv_usec * 1e-6;
 }
 #endif
-
 typedef struct Position
 {
     float x,y,z;
 }Position;
-
 #define SIZE 1024 * 1024
 int main()
 {
     DAI_INIT();
-   
-    int* test = NULL;
-    v_push(test, 2);
-    v_push(test, 69);
-    v_push(test, 78);
-    v_push(test, 12);
-    v_push(test, 54);
-    v_push(test, 12);
+    Position* test = NULL;
+    Position lmao = {69.0f,420.0f,1337.0f};
+    v_push(test, lmao);
 
+    for(int i = 0; i < 128; i++)
+    {
+        lmao.x = lmao.y = lmao.z = (f32)i;
+        v_push(test, lmao);
+    }
 
-    int n = v_size(test);
-   
+    int* l = MALLOC(128);
+
+    u32 n = v_size(test);
+    printf("N: %u\n", n);
     for (int i = 0; i < n; i++)
     {
-        printf("%d ", test[i]);
+        printf("@%d:{%f, %f, %f}\n", i, test[i].x, test[i].y,test[i].z);
     }
 
     return CHECK_MEMORY();

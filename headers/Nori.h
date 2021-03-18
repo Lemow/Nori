@@ -205,3 +205,4 @@ void* v_growFunc(void* vec, u32 increment, u32 elementSize);
 #define v_capacity(vec) v_raw(vec)[1]
 #define v_last(vec) (vec)[v_size(vec)]
 #define v_push(vec, element) if(v__need_grow(vec,1)) { (vec) = v_growFunc(vec,1,sizeof(*vec)); } v_last(vec) = element; v_size(vec)++;
+#define v_free(vec) FREE(v_raw(vec))

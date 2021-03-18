@@ -3,7 +3,7 @@
 void write_to_buffer(void **restrict buffer, const void *restrict src, size_t size)
 {
     memcpy(*buffer, src, size);
-    *buffer += size;
+    *((byte*)buffer) += size;
 }
 
 void recalculate_sparse(sparse_set *pSs)
