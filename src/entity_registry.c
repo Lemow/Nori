@@ -7,7 +7,7 @@ void er_init(entity_registry *pEr, u32 cvecCapacity)
     pEr->maxID = 0;
     pEr->cvecCount = 0;
     pEr->cvecCapacity = cvecCapacity;
-    idq_init(&pEr->idQueue);
+    idq_init(&pEr->idQueue, 128);
 }
 
 
@@ -74,7 +74,6 @@ void er_remove_entity(entity_registry *pEr, entity_t entityID)
         if (cv_find(pVecs, entityID) != NULL)
             cv_remove(pVecs, entityID);
     }
-
     idq_push(&pEr->idQueue, entityID);
 }
 
@@ -108,7 +107,7 @@ void er_serialize(entity_registry *pEr, const char *filePath)
 
         fwrite(&pEr->cvecCount, sizeof(u32),1, pFile);
         fwrite(&pEr->maxID,sizeof(u32), 1, pFile);
-
+        
         for(u32 i = 0; i < pEr->cvecCount; i++)
         {
             cvec* pCv = er_get_cvec(pEr,i);
@@ -120,6 +119,9 @@ void er_serialize(entity_registry *pEr, const char *filePath)
             fwrite(pCv->components, pCv->componentSize, pCv->componentCount, pFile); // Components  
             fwrite(pCv->entitySet.dense, sizeof(u32), pCv->componentCount, pFile);    // Entity IDs
         }
+
+        fwrite(&v_size(pEr->idQueue.queue), sizeof(u32), 1, pFile);
+        fwrite(pEr->idQueue.queue, sizeof(u32), v_size(pEr->idQueue.queue),pFile);
 
         fclose(pFile);
     } else
@@ -159,7 +161,11 @@ void er_deserialize(entity_registry* pEr, const char* filePath)
             fread(pCv->entitySet.dense, sizeof(u32), cCount, pFile);
             recalculate_sparse(&pCv->entitySet);
         }        
-
+        u32 qSize;
+        fread(&qSize, sizeof(u32), 1, pFile);
+        idq_init(&pEr->idQueue, qSize);
+        fread(pEr->idQueue.queue, sizeof(u32), qSize,pFile);
+        v_size(pEr->idQueue.queue) = qSize;
         fclose(pFile);
     }
     else

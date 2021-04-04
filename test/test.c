@@ -38,14 +38,14 @@ int main()
         v_push(test, lmao);
     }
 
-    int* l = MALLOC(128);
 
-    u32 n = v_size(test);
-    printf("N: %u\n", n);
+    int n = v_size(test);
+    printf("N: %d\n", n);
     for (int i = 0; i < n; i++)
     {
         printf("@%d:{%f, %f, %f}\n", i, test[i].x, test[i].y,test[i].z);
     }
 
-    return CHECK_MEMORY();
+    v_free(test);
+    return 0;
 }

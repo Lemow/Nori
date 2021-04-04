@@ -122,20 +122,13 @@ u32 ss_count(const sparse_set* pSs);
 /// <summary>
 ///  ID QUEUE
 /// </summary>
-typedef struct id_node
-{
-    u32 id;
-    struct id_node* next;
-}id_node;
 
 typedef struct id_queue
 {
-    id_node* back;
-    id_node* front;
-
+    u32* queue;
 }id_queue;
 
-void idq_init(id_queue* pQue);
+void idq_init(id_queue* pQue, u32 initialSize);
 void idq_push(id_queue* pQue, entity_t id);
 void idq_pop(id_queue* pQue, entity_t* id);
 void idq_free(id_queue* free);
@@ -198,6 +191,7 @@ void recalculate_sparse(sparse_set *pSs);
 /// VECTOR
 
 void* v_growFunc(void* vec, u32 increment, u32 elementSize);
+void* v_reserveFunc(void* vec, u32 count, u32 elementSize);
 
 #define v__need_grow(vec, n) ((vec) == 0 || v_size(vec) + n == v_capacity(vec))
 #define v_raw(vec) (((u32 *)(void *)(vec)-2))
@@ -206,3 +200,5 @@ void* v_growFunc(void* vec, u32 increment, u32 elementSize);
 #define v_last(vec) (vec)[v_size(vec)]
 #define v_push(vec, element) if(v__need_grow(vec,1)) { (vec) = v_growFunc(vec,1,sizeof(*vec)); } v_last(vec) = element; v_size(vec)++;
 #define v_free(vec) FREE(v_raw(vec))
+#define v_reserve(vec, n) v_reserveFunc(vec,n,sizeof(*vec))
+#define v_pop(vec) v_size(vec)--;
