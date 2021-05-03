@@ -149,7 +149,7 @@ int checkMemory()
         retval = -1;
     else
         retval = 0;        
-    av_free(&debugAllocationInfo.allocations);
+
     return retval;
 }
 

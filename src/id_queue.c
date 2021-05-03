@@ -2,7 +2,8 @@
 
 void idq_init(id_queue *pQue, u32 initialSize)
 {
-    v_reserve(pQue->queue, initialSize);
+    pQue->queue = NULL;
+    pQue->queue = v_reserve(pQue->queue, initialSize);
 }
 
 void idq_push(id_queue *pQue, entity_t id)
