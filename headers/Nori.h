@@ -30,7 +30,6 @@ typedef unsigned long long u64;
 
 typedef float f32;
 typedef double f64;
-typedef long double f80;
 
 typedef char* string;
 typedef unsigned char byte;
@@ -39,6 +38,22 @@ typedef u32 entity_t;
 typedef u32 componentID_t;
 
 
+static_assert(sizeof(i8)  == 1, "Size of types is different than expected");
+static_assert(sizeof(i16) == 2, "Size of types is different than expected");
+static_assert(sizeof(i32) == 4, "Size of types is different than expected");
+static_assert(sizeof(i64) == 8, "Size of types is different than expected");
+
+static_assert(sizeof(u8)  == 1, "Size of types is different than expected");
+static_assert(sizeof(u16) == 2, "Size of types is different than expected");
+static_assert(sizeof(u32) == 4, "Size of types is different than expected");
+static_assert(sizeof(u64) == 8, "Size of types is different than expected");
+
+static_assert(sizeof(f32) == 4, "Size of types is different than expected");
+static_assert(sizeof(f64) == 8, "Size of types is different than expected");
+
+#define global static
+#define internal static
+#define local_persistent static
 
 /// DEBUG ALLOCATION INFO
 
@@ -112,12 +127,12 @@ typedef struct sparse_set
 
 }sparse_set;
 
-void ss_init(sparse_set* const pSs, size_t initialCount);
-void ss_insert(sparse_set* const pSs, entity_t entityID);
-void ss_remove(sparse_set* const pSs, entity_t entityID);
-void ss_free(sparse_set* const pSs);
-u32 ss_find(const sparse_set* const pSs, entity_t entityID);
-u32 ss_count(const sparse_set* pSs);
+void nr_ss_init(sparse_set* const pSs, size_t initialCount);
+void nr_ss_insert(sparse_set* const pSs, entity_t entityID);
+void nr_ss_remove(sparse_set* const pSs, entity_t entityID);
+void nr_ss_free(sparse_set* const pSs);
+u32  nr_ss_find(const sparse_set* const pSs, entity_t entityID);
+u32  nr_ss_count(const sparse_set* pSs);
 
 /// <summary>
 ///  ID QUEUE
@@ -128,11 +143,13 @@ typedef struct id_queue
     u32* queue;
 }id_queue;
 
-void idq_init(id_queue* pQue, u32 initialSize);
-void idq_push(id_queue* pQue, entity_t id);
-void idq_pop(id_queue* pQue, entity_t* id);
-void idq_free(id_queue* free);
-bool idq_is_empty(const id_queue* pQue);
+void nr_idq_init(id_queue* pQue, u32 initialSize);
+void nr_idq_push(id_queue* pQue, entity_t id);
+void nr_idq_pop(id_queue* pQue, entity_t* id);
+void nr_idq_free(id_queue* free);
+bool nr_idq_is_empty(const id_queue* pQue);
+
+
 
 
 typedef struct cvec
@@ -148,13 +165,13 @@ typedef struct cvec
 /// COMPONENT VECTOR
 /// </summary>
 
-void cv_init(cvec* pCv, u32 componentSize, u32 initialCount);
-void cv_push(cvec* pCv, const void* pComponent, entity_t entityID);
-void cv_remove(cvec* pCv, entity_t entityID);
-void cv_free(cvec* pCv);
-void* cv_emplace(cvec* pCv, entity_t entityID);
-void* cv_find(cvec* pCv, entity_t entityID);
-size_t cv_sizeof(const cvec* pCv);
+void   nr_cv_init(cvec* pCv, u32 componentSize, u32 initialCount);
+void   nr_cv_push(cvec* pCv, const void* pComponent, entity_t entityID);
+void   nr_cv_remove(cvec* pCv, entity_t entityID);
+void   nr_cv_free(cvec* pCv);
+void*  nr_cv_emplace(cvec* pCv, entity_t entityID);
+void*  nr_cv_find(cvec* pCv, entity_t entityID);
+size_t nr_cv_sizeof(const cvec* pCv);
 
 
 typedef struct entity_registry
@@ -168,37 +185,36 @@ typedef struct entity_registry
 }entity_registry;
 
 
-void er_init(entity_registry* pEr, u32 cvecCount);
-void er_remove_entity(entity_registry* pEr, entity_t entityID);
-void er_push_component(entity_registry* pEr, entity_t entityID, componentID_t componentID, const void* pComponent);
-void er_free(entity_registry* pEr);
-void* er_emplace_component(entity_registry* pEr, entity_t entityID, componentID_t componentID);
-void* er_get_component(entity_registry* pEr, entity_t entityID, componentID_t componentID);
-componentID_t er_add_cvec(entity_registry* pEr, u32 componentSize, u32 InitialCount);
-entity_t er_create_entity(entity_registry* pEr);
-cvec* er_get_cvec(entity_registry* pEr, componentID_t componentID);
-void er_serialize(entity_registry* pEr, const char* filePath);
-void er_deserialize(entity_registry *pEr, const char *filePath);
+void          nr_er_init(entity_registry* pEr, u32 cvecCount);
+void          nr_er_remove_entity(entity_registry* pEr, entity_t entityID);
+void          nr_er_push_component(entity_registry* pEr, entity_t entityID, componentID_t componentID, const void* pComponent);
+void          nr_er_free(entity_registry* pEr);
+void*         nr_er_emplace_component(entity_registry* pEr, entity_t entityID, componentID_t componentID);
+void*         nr_er_get_component(entity_registry* pEr, entity_t entityID, componentID_t componentID);
+componentID_t nr_er_add_cvec(entity_registry* pEr, u32 componentSize, u32 InitialCount);
+entity_t      nr_er_create_entity(entity_registry* pEr);
+cvec*         nr_er_get_cvec(entity_registry* pEr, componentID_t componentID);
+void          nr_er_serialize(entity_registry* pEr, const char* filePath);
+void          nr_er_deserialize(entity_registry *pEr, const char *filePath);
 
 
 
 /// UTILITY
 
-void write_to_buffer(void **restrict buffer, const void *restrict src, size_t size);
 void recalculate_sparse(sparse_set *pSs);
 
 
 /// VECTOR
 
-void* v_growFunc(void* vec, u32 increment, u32 elementSize);
-void* v_reserveFunc(void* vec, u32 count, u32 elementSize);
+void* nr_v_growFunc(void* vec, u32 increment, u32 elementSize);
+void* nr_v_reserveFunc(void* vec, u32 count, u32 elementSize);
 
-#define v__need_grow(vec, n) ((vec) == 0 || v_size(vec) + n == v_capacity(vec))
-#define v_raw(vec) (((u32 *)(void *)(vec)-2))
-#define v_size(vec) v_raw(vec)[0]
-#define v_capacity(vec) v_raw(vec)[1]
-#define v_last(vec) (vec)[v_size(vec)]
-#define v_push(vec, element) if(v__need_grow(vec,1)) { (vec) = v_growFunc(vec,1,sizeof(*vec)); } v_last(vec) = element; v_size(vec)++;
-#define v_free(vec) FREE(v_raw(vec))
-#define v_reserve(vec, n) v_reserveFunc(vec,n,sizeof(*vec))
-#define v_pop(vec) v_size(vec)--;
+#define nr_v_size(vec) nr_v_raw(vec)[0]
+#define nr_v_raw(vec) (((u32 *)(void *)(vec)-2))
+#define nr_v_capacity(vec) nr_v_raw(vec)[1]
+#define nr_v__need_grow(vec, n) ((vec) == 0 || nr_v_size(vec) + n == nr_v_capacity(vec))
+#define nr_v_last(vec) (vec)[nr_v_size(vec)]
+#define nr_v_push(vec, element) if(nr_v__need_grow(vec,1)) { (vec) = nr_v_growFunc(vec,1,sizeof(*vec)); } nr_v_last(vec) = element; nr_v_size(vec)++;
+#define nr_v_free(vec) FREE(nr_v_raw(vec))
+#define nr_v_reserve(vec, n) nr_v_reserveFunc(vec,n,sizeof(*vec))
+#define nr_v_pop(vec) nr_v_size(vec)--;
