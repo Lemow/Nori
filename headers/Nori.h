@@ -16,6 +16,10 @@
 #define true 1
 #define false 0
 
+#define internal_func static
+#define global_variable static
+#define local_persistent static
+
 typedef char bool;
 
 typedef char i8;
@@ -37,6 +41,8 @@ typedef unsigned char byte;
 
 typedef u32 entity_t;
 typedef u32 componentID_t;
+
+typedef byte u8;
 
 
 
@@ -98,9 +104,52 @@ int checkMemory();
 #endif
 
 
+///Arena Allocator
+
+typedef struct FreeBlock
+{
+    union 
+    {
+        byte data[16];
+        struct
+        {
+            u64 size;
+            struct FreeBlock* pNext;
+        };
+    };
+}nori_freeblock;
+
+typedef struct Arena
+{
+    u64 uCapacity;
+    nori_freeblock* pFreeListHead;
+    byte* pStack;
+    byte pData[];
+}nori_arena;
+
+nori_arena* nori_arena_create(u64 uCapacity);
+
+void nori_arena_free(nori_arena* pArena);
+void* nori_arena_alloc(nori_arena* pArena, u64 uBytes);
+void nori_arena_dealloc();
 /// <summary>
 /// SPARSE SET
 /// </summary>
+
+typedef struct nori_vector
+{
+    u64 elementSize;
+    u32 size;
+    u32 cap;
+    char vec[];
+}nori_vector;
+
+
+nori_vector* nori_vector_init(u64 elementSize, u32 capacity);
+void nori_vector_push_back(nori_vector** pVec,void* pSrc, u32 elementCount);
+void* nori_vector_emplace_back(nori_vector** pVec, u32 elementCount);
+void* nori_vector_emplace(nori_vector** pVec, u32 elementCount, u32 destIndex);
+void nori_vector_push(nori_vector** pVec, void* pSrc, u32 elementCount, u32 destIndex);
 
 typedef struct sparse_set
 {

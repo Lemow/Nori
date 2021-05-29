@@ -1,5 +1,6 @@
 #include "Nori.h"
 
+
 void ss_init(sparse_set * const pSs, size_t initialCount)
 {
     pSs->dense = MALLOC(initialCount * sizeof(u32));

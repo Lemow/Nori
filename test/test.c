@@ -28,6 +28,16 @@ typedef struct Position
 int main()
 {
     DAI_INIT();
+
+    nori_arena* pArena = nori_arena_create(1024 * 4);
+    Position* pPosition = nori_arena_alloc(pArena,sizeof(Position) * 100);
+
+    for (int i = 0; i < 100; i++)
+    {
+        pPosition[i].x = i;
+        pPosition[i].y = 100 - i;
+    }
+
     Position* test = NULL;
     Position lmao = {69.0f,420.0f,1337.0f};
     v_push(test, lmao);

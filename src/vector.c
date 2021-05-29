@@ -1,64 +1,46 @@
 #include "Nori.h"
 
-void *v_growFunc(void *vec, u32 increment, u32 elementSize)
+
+nori_vector* nori_vector_init(u64 elementSize, u32 capacity)
 {
-    u32 newCap;
-    u32 *ptr;
-    if (vec)
-    {
-        u32 cap_double = 2 * v_capacity(vec);
-        u32 minNeeded = v_size(vec) + increment;
-        newCap = max(cap_double, minNeeded);
-        ptr = REALLOC(v_raw(vec), newCap * elementSize + sizeof(u32) * 2);
-        if (ptr)
-        {
-            ptr[1] = newCap;
-            return ptr + 2;
-        }
-    }
-    else
-    {
-        newCap = increment;
-        ptr = MALLOC(newCap * elementSize + sizeof(u32) * 2);
-        if (ptr)
-        {
-            ptr[0] = 0;
-            ptr[1] = newCap;
-            return ptr + 2;
-        }
-    }
-    fprintf(stderr, "Out of memory in "__FILE__"\n");
-    return NULL;
+    nori_vector* pVec = MALLOC(sizeof(nori_vector) * elementSize * capacity);
+    pVec->elementSize = elementSize;
+    pVec->size = 0;
+    pVec->cap = capacity;
+
+    return pVec;
 }
 
-void *v_reserveFunc(void *vec, u32 count, u32 elementSize)
+static void reserve(nori_vector** pVec, u32 newCap)
 {
-    if (vec)
+    nori_vector* pNew = REALLOC(*pVec, newCap);
+    if (pNew)
     {
-        if (count <= v_capacity(vec))
-            return vec;
-        else
-        {
-            u32 *ptr = REALLOC(v_raw(vec), count * elementSize + sizeof(u32) * 2);
-            if (ptr)
-            {
-                ptr[0] = 0;
-                ptr[1] = count * elementSize;
-                return ptr + 2;
-            }
-        }
+        *pVec = pNew;
+        pNew->cap = newCap;
     }
-    else
-    {
-        u32 *ptr = MALLOC(count * elementSize + sizeof(u32) * 2);
-        if (ptr)
-        {
-            ptr[1] = count * elementSize;
-            return ptr + 2;
-        }
-    }
-    fprintf(stderr, "Out of memory in "__FILE__
-                    "\n");
-    return NULL;
 }
-// nice
+
+void nori_vector_push_back(nori_vector** pVec, void* pSrc, u32 elementCount)
+{
+    if ((*pVec)->size + elementCount >= (*pVec)->cap)
+    {
+        u32 newCap = max((*pVec)->cap * 2, (*pVec)->size + elementCount);
+        reserve(pVec, newCap);
+    }
+
+    
+}
+
+void* nori_vector_emplace_back(nori_vector** pVec, u32 elementCount)
+{
+    if ((*pVec)->size + elementCount >= (*pVec)->cap)
+    {
+        u32 newCap = max((*pVec)->cap * 2, (*pVec)->size + elementCount);
+        reserve(pVec,newCap);
+    }
+
+    void* retval = (*pVec)->vec + (*pVec)->size * (*pVec)->elementSize;
+    (*pVec)->size += elementCount * (*pVec)->elementSize;
+    return retval;
+}
