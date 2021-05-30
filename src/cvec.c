@@ -1,8 +1,8 @@
 #include "Nori.h"
 
-void cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
+void nr_cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
 {
-    ss_init(&pCv->entitySet, initialCount);
+    nr_ss_init(&pCv->entitySet, initialCount);
     pCv->capacity = initialCount;
     pCv->componentCount = 0;
     pCv->componentSize = componentSize;
@@ -10,7 +10,7 @@ void cv_init(cvec *pCv, u32 componentSize, u32 initialCount)
 
 }
 
-size_t cv_sizeof(const cvec *pCv)
+size_t nr_cv_sizeof(const cvec *pCv)
 {
     size_t size = sizeof(cvec);
     size += pCv->componentCount * pCv->componentSize;
@@ -18,23 +18,23 @@ size_t cv_sizeof(const cvec *pCv)
     return size;
 }
 
-void *cv_find(cvec *pCv, entity_t id)
+void *nr_cv_find(cvec *pCv, entity_t id)
 {
-    u32 index = ss_find(&pCv->entitySet, id);
+    u32 index = nr_ss_find(&pCv->entitySet, id);
 
     return (void*)((index != -1) * (u64)((char*)pCv->components + (index * pCv->componentSize)));
 }
 
-void cv_free(cvec *pCv)
+void nr_cv_free(cvec *pCv)
 {
     FREE(pCv->components);
-    ss_free(&pCv->entitySet);
+    nr_ss_free(&pCv->entitySet);
 }
 
-void cv_push(cvec *pCv, const void *pComponent, entity_t id)
+void nr_cv_push(cvec *pCv, const void *pComponent, entity_t id)
 {
 #ifdef DEBUG
-    if (ss_find(&pCv->entitySet, id) != -1)
+    if (nr_ss_find(&pCv->entitySet, id) != -1)
     {
         fprintf(stderr, "id %u already in set\n", id);
         return;
@@ -53,17 +53,16 @@ void cv_push(cvec *pCv, const void *pComponent, entity_t id)
     void *pInsert = (char*)pCv->components + (pCv->componentCount * pCv->componentSize);
     memcpy(pInsert, pComponent, pCv->componentSize);
 
-    ss_insert(&pCv->entitySet, id);
+    nr_ss_insert(&pCv->entitySet, id);
 
     pCv->componentCount++;
 }
 
-void *cv_emplace(cvec *pCv, entity_t id)
+void *nr_cv_emplace(cvec *pCv, entity_t id)
 {
 #ifdef DEBUG
-    if (ss_find(&pCv->entitySet, id) != -1)
+    if (nr_ss_find(&pCv->entitySet, id) != -1)
     {
-        fprintf(stderr, "id %u already in set\n", id);
         return NULL;
     }
 #endif
@@ -77,17 +76,17 @@ void *cv_emplace(cvec *pCv, entity_t id)
 
     void *pInsert = (char*)pCv->components + (pCv->componentCount * pCv->componentSize);
 
-    ss_insert(&pCv->entitySet, id);
+    nr_ss_insert(&pCv->entitySet, id);
 
     pCv->componentCount++;
     return pInsert;
 }
 
-void cv_remove(cvec *pCv, entity_t id)
+void nr_cv_remove(cvec *pCv, entity_t id)
 {
-    void *pToRemove = (char*)pCv->components + ss_find(&pCv->entitySet, id) * pCv->componentSize;
+    void *pToRemove = (char*)pCv->components + nr_ss_find(&pCv->entitySet, id) * pCv->componentSize;
     void *pLast = (char*)pCv->components + (pCv->componentCount - 1) * pCv->componentSize;
-    ss_remove(&pCv->entitySet, id);
+    nr_ss_remove(&pCv->entitySet, id);
 
     memcpy(pToRemove, pLast, pCv->componentSize);
     pCv->componentCount--;

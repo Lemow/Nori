@@ -5,57 +5,51 @@
 #include <Windows.h>
 double get_time()
 {
-    LARGE_INTEGER t, f;
-    QueryPerformanceCounter(&t);
-    QueryPerformanceFrequency(&f);
-    return (double)t.QuadPart / (double)f.QuadPart;
+	LARGE_INTEGER t, f;
+	QueryPerformanceCounter(&t);
+	QueryPerformanceFrequency(&f);
+	return (double)t.QuadPart / (double)f.QuadPart;
 }
 #else
 #include <sys/time.h>
 #include <sys/resource.h>
 double get_time()
 {
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    return t.tv_sec + t.tv_usec * 1e-6;
+	struct timeval t;
+	gettimeofday(&t, NULL);
+	return t.tv_sec + t.tv_usec * 1e-6;
 }
 #endif
 typedef struct Position
 {
-    float x,y,z;
+	float x, y, z;
 }Position;
 #define SIZE 1024 * 1024
+struct a
+{
+	const int lol;
+};
+
+
+
+
 int main()
 {
-    DAI_INIT();
 
-    nori_arena* pArena = nori_arena_create(1024 * 4);
-    Position* pPosition = nori_arena_alloc(pArena,sizeof(Position) * 100);
-
-    for (int i = 0; i < 100; i++)
-    {
-        pPosition[i].x = i;
-        pPosition[i].y = 100 - i;
-    }
-
-    Position* test = NULL;
-    Position lmao = {69.0f,420.0f,1337.0f};
-    v_push(test, lmao);
-
-    for(int i = 0; i < 128; i++)
-    {
-        lmao.x = lmao.y = lmao.z = (f32)i;
-        v_push(test, lmao);
-    }
+	DAI_INIT();
 
 
-    int n = v_size(test);
-    printf("N: %d\n", n);
-    for (int i = 0; i < n; i++)
-    {
-        printf("@%d:{%f, %f, %f}\n", i, test[i].x, test[i].y,test[i].z);
-    }
+	nori_stack_allocator(stackAllocator, 128 * sizeof(int));
 
-    v_free(test);
-    return 0;
+
+	nori_blk blk = nori_stack_alloc(&stackAllocator, 4 * sizeof(int));
+
+	int* pInts = blk.pAddress;
+
+	pInts[0] = 2;
+	pInts[1] = 3;
+	pInts[2] = 4;
+	pInts[3] = 5;
+
+	return 0;
 }

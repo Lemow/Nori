@@ -1,46 +1,51 @@
 #include "Nori.h"
 
 
-nori_vector* nori_vector_init(u64 elementSize, u32 capacity)
+void *nr_v_growFunc(void *vec, u32 increment, u32 elementSize)
 {
-    nori_vector* pVec = MALLOC(sizeof(nori_vector) * elementSize * capacity);
-    pVec->elementSize = elementSize;
-    pVec->size = 0;
-    pVec->cap = capacity;
-
-    return pVec;
-}
-
-static void reserve(nori_vector** pVec, u32 newCap)
-{
-    nori_vector* pNew = REALLOC(*pVec, newCap);
-    if (pNew)
+    u32 newCap;
+    u32 *ptr; 
+    if (vec)
     {
-        *pVec = pNew;
-        pNew->cap = newCap;
+        const u32 cap_double = 2 * nr_v_capacity(vec);
+        u32 minNeeded = nr_v_size(vec) + increment;
+        newCap = max(cap_double, minNeeded);
+        ptr = REALLOC(nr_v_raw(vec), newCap * elementSize + sizeof(u32) * 2);
+        if (ptr)
+        {
+            ptr[1] = newCap;
+            return ptr + 2;
+        }
+    }
+    else
+    {
+        ptr = MALLOC(increment * elementSize);
+        ptr[0] = 0;
+        ptr[1] = increment;
+        return ptr + 2;
     }
 }
 
-void nori_vector_push_back(nori_vector** pVec, void* pSrc, u32 elementCount)
+
+void *nr_v_reserveFunc(void *vec, u32 count, u32 elementSize)
 {
-    if ((*pVec)->size + elementCount >= (*pVec)->cap)
+    if (nr_v_size(vec) + count >= nr_v_capacity(vec))
     {
-        u32 newCap = max((*pVec)->cap * 2, (*pVec)->size + elementCount);
-        reserve(pVec, newCap);
+
+        if (count <= nr_v_capacity(vec))
+            return vec;
+        else
+        {
+            u32 *ptr = REALLOC(nr_v_raw(vec), count * elementSize + sizeof(u32) * 2);
+            if (ptr)
+            {
+                ptr[0] = 0;
+                ptr[1] = count * elementSize;
+                return ptr + 2;
+            }
+        }
     }
 
     
 }
 
-void* nori_vector_emplace_back(nori_vector** pVec, u32 elementCount)
-{
-    if ((*pVec)->size + elementCount >= (*pVec)->cap)
-    {
-        u32 newCap = max((*pVec)->cap * 2, (*pVec)->size + elementCount);
-        reserve(pVec,newCap);
-    }
-
-    void* retval = (*pVec)->vec + (*pVec)->size * (*pVec)->elementSize;
-    (*pVec)->size += elementCount * (*pVec)->elementSize;
-    return retval;
-}

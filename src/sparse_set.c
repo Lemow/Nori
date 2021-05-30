@@ -1,7 +1,6 @@
 #include "Nori.h"
 
-
-void ss_init(sparse_set * const pSs, size_t initialCount)
+void nr_ss_init(sparse_set * const pSs, size_t initialCount)
 {
     pSs->dense = MALLOC(initialCount * sizeof(u32));
     pSs->sparse = MALLOC(initialCount * sizeof(u32));
@@ -10,12 +9,12 @@ void ss_init(sparse_set * const pSs, size_t initialCount)
     pSs->denseCount = 0;
 }
 
-u32 ss_count(const sparse_set * const pSs)
+u32 nr_ss_count(const sparse_set * const pSs)
 {
     return pSs->denseCount;
 }
 
-u32 ss_find(const sparse_set * const pSs, entity_t val)
+u32 nr_ss_find(const sparse_set * const pSs, entity_t val)
 {
     if (val > pSs->maxVal)
         return -1;
@@ -31,7 +30,7 @@ u32 ss_find(const sparse_set * const pSs, entity_t val)
         return -1;
 }
 
-void ss_insert(sparse_set * const pSs, entity_t val)
+void nr_ss_insert(sparse_set * const pSs, entity_t val)
 {
 
     if (pSs->maxVal < val)
@@ -57,7 +56,7 @@ void ss_insert(sparse_set * const pSs, entity_t val)
     pSs->denseCount++;
 }
 
-void ss_remove(sparse_set * const pSs, entity_t val)
+void nr_ss_remove(sparse_set * const pSs, entity_t val)
 {
     u32 index = pSs->sparse[val];
     u32 lastIndex = pSs->denseCount - 1;
@@ -72,7 +71,7 @@ void ss_remove(sparse_set * const pSs, entity_t val)
     pSs->denseCount--;
 }
 
-void ss_free(sparse_set * const pSs)
+void nr_ss_free(sparse_set * const pSs)
 {
     FREE(pSs->dense);
     FREE(pSs->sparse);

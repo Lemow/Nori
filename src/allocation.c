@@ -181,74 +181,42 @@ int checkMemory()
 	Allocation* iter = debugAllocationInfo.allocations.begin;
 	Allocation* end = debugAllocationInfo.allocations.end;
 
+	FILE* pFile = fopen("memoryLog.txt", "w");
+
 	for (; iter != end; iter++)
 	{
-		fprintf(stderr, "%lu bytes @%p allocated in %s:%s, line %d not freed!\n", iter->size, iter->ptr, iter->file, iter->function, iter->line);
+		fprintf(pFile, "%lu bytes @%p allocated in %s:%s, line %d not freed!\n", iter->size, iter->ptr, iter->file, iter->function, iter->line);
 	}
+
+	fclose(pFile);
 
 	int retval;
 	if (av_size(&debugAllocationInfo.allocations) != 0)
 		retval = -1;
 	else
 		retval = 0;
-	av_free(&debugAllocationInfo.allocations);
+
+	return retval;
+}
+#endif
+
+nori_blk nori_stack_alloc(nori_stack_allocator_t* pArena, u64 uSize)
+{
+	nori_blk retval = {NULL,0};
+	uSize += nori_alignment_distance(pArena->pStack + uSize, 8);
+	if ((pArena->pData + pArena->uCapacity) - pArena->pStack >= uSize)
+	{
+		retval.pAddress = pArena->pStack;
+		retval.uSize = uSize;
+		pArena->pStack += uSize;
+	}
 	return retval;
 }
 
-#endif
-
-
-nori_arena* nori_arena_create(u64 uCapacity)
+void nori_stack_dealloc(nori_stack_allocator_t* pArena, nori_blk memoryBlock)
 {
-	nori_arena* pArena = nori_page_alloc(uCapacity + sizeof(nori_arena), &uCapacity);
-	pArena->uCapacity = uCapacity - sizeof(nori_arena);
-	pArena->pStack = pArena->pData;
-	return pArena;
+	if (pArena->pStack == (char*)memoryBlock.pAddress + memoryBlock.uSize)
+		pArena->pStack -= memoryBlock.uSize;
 }
 
-void nori_arena_free(nori_arena* pArena)
-{
-#ifdef DEBUG
-	nori_page_free(pArena, sizeof(nori_arena) + pArena->uCapacity);
-#else
-	nori_page_free(pArena, 0);
-#endif
-}
-
-void* nori_arena_alloc(nori_arena* pArena, u64 uBytes)
-{
-	uBytes += nori_alignment_distance(pArena->pStack + uBytes, 8);
-	if ((pArena->pData + pArena->uCapacity) - pArena->pStack < uBytes)
-	{
-		void* retval = pArena->pStack;
-		pArena->pStack += uBytes;
-		return retval;
-	}
-	else
-	{
-		nori_freeblock* pLastBlock = NULL;
-		nori_freeblock* pFreeBlock = pArena->pFreeListHead;
-		void* retval = NULL;
-		while (pFreeBlock)
-		{
-			if (pFreeBlock->size <= uBytes)
-			{
-				retval = pFreeBlock;
-				break;
-			}
-
-			pLastBlock = pFreeBlock;
-			pFreeBlock = pFreeBlock->pNext;
-		}
-
-		if (retval)
-		{
-			if (pLastBlock)
-				pLastBlock->pNext = pFreeBlock->pNext;
-			else
-				pArena->pFreeListHead = pFreeBlock->pNext;
-		}
-
-		return retval;
-	}
-}
+void nori_stack_dealloc_all(nori_stack_allocator_t* pArena);
