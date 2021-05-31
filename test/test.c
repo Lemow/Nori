@@ -51,5 +51,7 @@ int main()
 	pInts[2] = 4;
 	pInts[3] = 5;
 
+	printf("%d\n%d\n%d\n%d\n", pInts[0], pInts[1], pInts[2], pInts[3]);
+
 	return 0;
 }

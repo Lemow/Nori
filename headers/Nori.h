@@ -30,6 +30,7 @@ typedef unsigned long long u64;
 
 typedef float f32;
 typedef double f64;
+typedef long double f80;
 
 typedef char* string;
 typedef unsigned char byte;
@@ -38,18 +39,19 @@ typedef u32 entity_t;
 typedef u32 componentID_t;
 
 
-static_assert(sizeof(i8) == 1, "Size of types is different than expected");
-static_assert(sizeof(i16) == 2, "Size of types is different than expected");
-static_assert(sizeof(i32) == 4, "Size of types is different than expected");
-static_assert(sizeof(i64) == 8, "Size of types is different than expected");
+_Static_assert(sizeof(i8) == 1, "Size of types is different than expected");
+_Static_assert(sizeof(i16) == 2, "Size of types is different than expected");
+_Static_assert(sizeof(i32) == 4, "Size of types is different than expected");
+_Static_assert(sizeof(i64) == 8, "Size of types is different than expected");
 
-static_assert(sizeof(u8) == 1, "Size of types is different than expected");
-static_assert(sizeof(u16) == 2, "Size of types is different than expected");
-static_assert(sizeof(u32) == 4, "Size of types is different than expected");
-static_assert(sizeof(u64) == 8, "Size of types is different than expected");
+_Static_assert(sizeof(u8) == 1, "Size of types is different than expected");
+_Static_assert(sizeof(u16) == 2, "Size of types is different than expected");
+_Static_assert(sizeof(u32) == 4, "Size of types is different than expected");
+_Static_assert(sizeof(u64) == 8, "Size of types is different than expected");
 
-static_assert(sizeof(f32) == 4, "Size of types is different than expected");
-static_assert(sizeof(f64) == 8, "Size of types is different than expected");
+_Static_assert(sizeof(f32) == 4, "Size of types is different than expected");
+_Static_assert(sizeof(f64) == 8, "Size of types is different than expected");
+_Static_assert(sizeof(f80) >= 8, "Size of types is different than expected");
 
 #define global static
 #define internal_func static
@@ -78,7 +80,7 @@ typedef struct alloc_vector
 typedef struct DebugAllocateInfo
 {
 	alloc_vector allocations;
-
+	FILE* stream;	
 }DebugAllocateInfo;
 
 
@@ -93,21 +95,24 @@ Allocation* av_find(alloc_vector* pAv, const void* ptr);
 bool av_remove(alloc_vector* pAv, void* pToRemove);
 
 
-void dai_init();
+void dai_init(FILE* stream);
 void dfree(void* ptr);
 void* dalloc(size_t size, const char* fileName, const char* functionName, int line);
 void* drealloc(void* ptr, size_t size);
+void dregalloc(void* ptr, size_t size, const char* fileName, const char* functionName, int line);
 int checkMemory();
 
-#define DAI_INIT() dai_init()
+#define DAI_INIT(stream) dai_init(stream)
 #define MALLOC(size) dalloc(size, __FILE__, __FUNCTION__,__LINE__)
 #define FREE(ptr) dfree(ptr)
 #define REALLOC(ptr, size) drealloc(ptr,size)
+#define REGISTERALLOC(ptr,size) dregalloc(ptr,size, __FILE__, __FUNCTION__, __LINE__)
 #define CHECK_MEMORY() checkMemory() 
 #else
 #define DAI_INIT() 
 #define MALLOC(size) malloc(size)
 #define REALLOC(ptr, size) realloc(ptr, size)
+#define REGISTERALLOC(ptr, size)
 #define FREE(ptr) free(ptr)
 #define CHECK_MEMORY() 0
 #endif
@@ -125,34 +130,34 @@ typedef struct FreeBlock
 	struct FreeBlock* pNext;
 }nori_freeblock;
 
-typedef struct Arena
+typedef struct StackAllocator
 {
 	u8* pStack;
 	u64 uCapacity;
-	u8 pData[];
+	u8 pMemory[];
 }nori_stack_allocator_t;
 
-#define nori_stack_allocator(var_name,bytes) struct nsa\
-{\
-    union \
-    {\
-        struct nsa_impl\
-        {\
-            u8* pStack;\
-            u64 uCapacity;\
-            u8 pData[];\
-        }; \
-        char pBytes[sizeof(struct nsa_impl) + (bytes)]; \
-    }; \
-}var_name = {var_name.pData, (bytes)}
-
+nori_stack_allocator_t* nori_stack_allocator_create(u64 uCapacity);
 nori_blk nori_stack_alloc(nori_stack_allocator_t* pStack, u64 uSize);
 void nori_stack_dealloc(nori_stack_allocator_t* pStack, nori_blk memoryBlock);
 void nori_stack_dealloc_all(nori_stack_allocator_t* pStack);
 
+
+typedef struct PoolAllocator
+{
+	u32 uBlockSize;
+	u32 uPoolCount;
+	u8* uPoolInfo;
+	u8 pMemory[];
+} nori_pool_allocator_t;
+
+
+
+
 /// <summary>
 /// SPARSE SET
 /// </summary>
+
 
 typedef struct sparse_set
 {
