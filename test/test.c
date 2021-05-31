@@ -36,10 +36,9 @@ struct a
 int main()
 {
 
-	DAI_INIT();
+	DAI_INIT(NULL);
 
-
-	nori_stack_allocator(stackAllocator, 128 * sizeof(int));
+	nori_stack_allocator_t* stackAllocator = nori_stack_allocator_create(123 * sizeof(int));
 
 
 	nori_blk blk = nori_stack_alloc(&stackAllocator, 4 * sizeof(int));

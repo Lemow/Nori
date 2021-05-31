@@ -14,12 +14,21 @@ u64 nori_alignment_distance(u64 n, u64 uAlignment)
 nori_blk nori_malloc(size_t uSize)
 {
 	nori_blk retval = {NULL, 0};
-	uSize += nori_alignment_distance(uSize,getpagesize());
+	uSize += nori_alignment_distance(uSize, getpagesize());
 	retval.pAddress = (NULL, uSize, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS);
 	retval.uSize = uSize;
-	REGISTERALLOC(retval.pAddress, retval.uSize);
 	return retval;
 }
+
+int nori_free(nori_blk *pBlk)
+{
+#ifdef DEBUG
+	return mprotect(pBlk->pAddress, pBlk->uSize, PROT_NONE);
+#else
+	return munmap(pBlk->pAddress, pBlk->uSize);
+#endif
+}
+
 #else
 #ifdef _WIN32
 //TODO: track memory pages
@@ -145,11 +154,11 @@ Allocation *av_find(alloc_vector *pAv, const void *ptr)
 
 void dai_init(FILE *stream)
 {
-	if(stream)
+	if (stream)
 		debugAllocationInfo.stream = stream;
-	else 
-	debugAllocationInfo.stream = stderr;
-	
+	else
+		debugAllocationInfo.stream = stderr;
+
 	av_init(&debugAllocationInfo.allocations);
 }
 
@@ -247,5 +256,39 @@ void nori_stack_dealloc_all(nori_stack_allocator_t *pArena)
 
 nori_stack_allocator_t *nori_stack_allocator_create(u64 uCapacity)
 {
-	nori_stack_allocator_t *pAllocator = nori_malloc();
+	nori_blk blk = nori_malloc(sizeof(nori_stack_allocator_t) + uCapacity);
+	REGISTERALLOC(blk.pAddress, blk.uSize);
+	nori_stack_allocator_t *retval = blk.pAddress;
+	retval->pStack = retval->pMemory;
+	retval->uCapacity = blk.uSize;
+	return retval;
+}
+
+nori_pool_allocator_t *nori_pool_create(u32 uPoolSize, u32 uPoolCount)
+{
+	nori_blk blk = nori_malloc(uPoolSize * uPoolCount + (uPoolCount / 8) + 1 + sizeof(nori_pool_allocator_t));
+	REGISTERALLOC(blk.pAddress, blk.uSize);
+	nori_pool_allocator_t *retval = blk.pAddress;
+	retval->uPoolSize = uPoolSize;
+	retval->uPoolCount = uPoolCount;
+	retval->uPoolBitmap = retval->pMemory;
+}
+
+void nori_pool_init(nori_pool_allocator_t *pAlloc, u32 uPoolSize, u32 uPoolCount)
+{
+	pAlloc->uPoolSize = uPoolSize;
+	pAlloc->uPoolCount = uPoolCount;
+	pAlloc->uPoolBitmap = pAlloc->pMemory;
+}
+
+
+//TODO: make a good search for this |
+//								   	V
+nori_blk nori_pool_alloc(nori_pool_allocator_t *pAlloc, u32 PoolCount)
+{
+	const u32 uFullPages = PoolCount / 8; // 8 -> 1, 7 -> 0
+	const u32 uRemainder = PoolCount % 8; // 8 -> 0, 7 -> 7
+
+
+
 }
