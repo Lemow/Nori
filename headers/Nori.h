@@ -38,7 +38,6 @@ typedef unsigned char byte;
 typedef u32 entity_t;
 typedef u32 componentID_t;
 
-
 _Static_assert(sizeof(i8) == 1, "Size of types is different than expected");
 _Static_assert(sizeof(i16) == 2, "Size of types is different than expected");
 _Static_assert(sizeof(i32) == 4, "Size of types is different than expected");
@@ -57,8 +56,7 @@ _Static_assert(sizeof(f80) >= 8, "Size of types is different than expected");
 #define internal_func static
 #define local_persistent static
 
-#define BIT(x) (1 << x)
-
+#define BIT(x) (1 << (x))
 
 /// DEBUG ALLOCATION INFO
 
@@ -108,7 +106,7 @@ int checkMemory();
 #define REGISTERALLOC(ptr, size) dregalloc(ptr, size, __FILE__, __FUNCTION__, __LINE__)
 #define CHECK_MEMORY() checkMemory()
 #else
-#define DAI_INIT()
+#define DAI_INIT(stream)
 #define MALLOC(size) malloc(size)
 #define REALLOC(ptr, size) realloc(ptr, size)
 #define REGISTERALLOC(ptr, size)
@@ -116,12 +114,40 @@ int checkMemory();
 #define CHECK_MEMORY() 0
 #endif
 
+i32 nori_memcpy(byte* pSrc, byte* pDst, size_t uBytes);
+i32 nori_memset(byte* pSrc, byte val, size_t uBytes);
+
 //Memory block
 typedef struct MemoryBlock
 {
 	void *pAddress;
 	u64 uSize;
-} nori_blk;
+} nori_blk_t;
+
+nori_blk_t nori_malloc(size_t uSize);
+int nori_free(nori_blk_t *pBlk);
+u64 nori_alignment_distance(u64 n, u64 uAlignment);
+
+#define FREELIST_BLOCK_FREE_MASK (u64)(1)
+#define FREELIST_BLOCK_ADDRESS_MASK (void*)(~1)
+
+typedef struct FreeListBlock
+{
+    struct FreeListBlock* pNext;
+}nori_freelist_block_t;
+
+bool nori_is_freelist_block_free(const nori_freelist_block_t* pBlock);
+
+typedef struct FreeListHeader  
+{
+    u64 uSize;
+    nori_freelist_block_t* pBlock;
+}nori_freelist_header_t;
+
+typedef struct FreelistAllocator
+{
+    nori_freelist_header_t header;    
+}nori_freelist_allocator_t;
 
 typedef struct StackAllocator
 {
@@ -131,11 +157,11 @@ typedef struct StackAllocator
 } nori_stack_allocator_t;
 
 nori_stack_allocator_t *nori_stack_allocator_create(u64 uCapacity);
-void nori_stack_init(nori_stack_allocator_t *pAlloc);
-nori_blk nori_stack_alloc(nori_stack_allocator_t *pAlloc, u64 uSize);
-void nori_stack_dealloc(nori_stack_allocator_t *pAlloc, nori_blk memoryBlock);
+void nori_stack_init(nori_stack_allocator_t *pAlloc, u64 uCapacity);
+nori_blk_t nori_stack_alloc(nori_stack_allocator_t *pAlloc, u64 uSize);
+void nori_stack_dealloc(nori_stack_allocator_t *pAlloc, nori_blk_t memoryBlock);
 void nori_stack_dealloc_all(nori_stack_allocator_t *pAlloc);
-int nori_stack_owns(const nori_stack_allocator_t *pAlloc, const nori_blk *pBlk);
+int nori_stack_owns(const nori_stack_allocator_t *pAlloc, const nori_blk_t *pBlk);
 
 typedef struct PoolAllocator
 {
@@ -148,13 +174,10 @@ typedef struct PoolAllocator
 
 nori_pool_allocator_t *nori_pool_create(u32 uPoolSize, u32 uPoolCount);
 void nori_pool_init(nori_pool_allocator_t *pAlloc, u32 uPoolSize, u32 uPoolCount);
-nori_blk nori_pool_alloc(nori_pool_allocator_t *pAlloc, u32 PoolCount);
-void nori_pool_dealloc(nori_pool_allocator_t *pAlloc, nori_blk *pBlk);
+nori_blk_t nori_pool_alloc(nori_pool_allocator_t *pAlloc);
+void nori_pool_dealloc(nori_pool_allocator_t *pAlloc, nori_blk_t *pBlk);
 void nori_pool_dealloc_all(nori_pool_allocator_t *pAlloc);
-int nori_pool_owns(const nori_pool_allocator_t *pAlloc, const nori_blk *pBlk);
-
-
-
+int nori_pool_owns(const nori_pool_allocator_t *pAlloc, const nori_blk_t *pBlk);
 
 /// <summary>
 /// SPARSE SET
@@ -259,3 +282,4 @@ void *nr_v_reserveFunc(void *vec, u32 count, u32 elementSize);
 #define nr_v_free(vec) FREE(nr_v_raw(vec))
 #define nr_v_reserve(vec, n) nr_v_reserveFunc(vec, n, sizeof(*vec))
 #define nr_v_pop(vec) nr_v_size(vec)--;
+
